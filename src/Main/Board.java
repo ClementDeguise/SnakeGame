@@ -1,10 +1,14 @@
 package Main;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.Random;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 
 /** Java Snake Game with AWT (OLD)
@@ -26,14 +30,17 @@ public class Board extends JPanel implements ActionListener {
 
     private final int DOT_SIZE = 5;
 
+    // movement delay in ms
+    private final int delay = 140;
+
 
 
 
     //keys pressed, starting from the right, going left
-    private boolean Up = false;
-    private boolean Down = false;
-    private boolean Right = false;
-    private boolean Left = true;
+    private boolean up = false;
+    private boolean down = false;
+    private boolean right = false;
+    private boolean left = true;
 
 
     //score
@@ -55,8 +62,10 @@ public class Board extends JPanel implements ActionListener {
     private boolean inGame = false;
 
 
-    //random generator
-    Random randomGenerator = new Random();
+    // timer for continuous movement when no key is pressed (or same direction)
+    private Timer timer;
+
+
 
 
     /** ----------------------------------- **/
@@ -93,16 +102,18 @@ public class Board extends JPanel implements ActionListener {
 
 
     // what do we do when a key (action) has been pressed
+    // TODO : does it triggers every timer or just on action ?
     @Override
     public void actionPerformed(ActionEvent e) {
 
         if (inGame) {
-            dotReached();;
+            dotReached();
             checkCollision();
             moveSnake();
         }
 
-
+        // refreshes the view of the graphic component
+        repaint();
 
 
     }
@@ -116,38 +127,117 @@ public class Board extends JPanel implements ActionListener {
     /** set of methods **/
 
     //generate the starting position of the snake, generate a dot, paint components
-    private void initGame() {}
+    private void initGame() {
+
+        //snake starting position : 50 50 going left
+        for (int i = 0; i < snake_length; i++) {
+            x[i] = 50 + i*DOT_SIZE;  // careful to size of "real" pixels
+            y[i] = 50;
+        }
+
+        //generate the first dot
+        generateDot();
+
+        // set the timer to the delay, and between-EventListener delay, which is the same
+        timer = new Timer(delay, this);
+        timer.start();
+
+        // start the game
+        inGame = true;
+
+
+
+    }
 
 
     // generate new dot location, but be careful to avoid the snake !
     // the program must work for any board dimension
     // TODO : don't spawn dots on top of the snake
     private void generateDot() {
-        dot_x = randomGenerator.nextInt(board_width);
-        dot_y = randomGenerator.nextInt(board_height);
+        dot_x = new Random().nextInt(board_width);
+        dot_y = new Random().nextInt(board_height);
     }
 
 
-    // set up the colors
+    // set up the colors, allow for custom textures to be displayed
     private void drawComponents(Graphics g) {}
 
 
     // game over screen
     private void gameOver() {}
 
-    // increase score count
-    private void dotReached() {}
+
+
+    // check for dot reached and increase score count
+    private void dotReached() {
+        if (x[0] == dot_x && y[0] == dot_y) {
+            score += 1;
+            snake_length += 1;
+            generateDot();
+        }
+    }
 
 
     // move the snake by painting the pixels according to the direction
-    private void moveSnake() {}
+    private void moveSnake() {
 
 
-    // check if you hit your tail
-    private void checkCollision() {}
+    }
 
 
 
+    // check if you hit your tail, call a game over
+    private void checkCollision() {
+        // opposite direction to finish at 1
+        for (int z = snake_length; z > 0; z--) {
+            if (x[0] == x[z] && y[0] == y[z]) inGame = false;
+        }
+
+    }
+
+
+
+
+
+    // KeyAdapter is abstract, implements KeyListener
+    // TODO : check if the class can be put in its own file since it needs to access the direction booleans, and the keyPressed method cannot be modified to take parameters
+    private class TAdapter extends KeyAdapter {
+
+        /* default methods:
+        keyPressed
+        keyReleased
+        keyTyped
+         */
+        @Override
+        public void keyPressed(@NotNull KeyEvent e) {
+
+            //retrieve the keyboard key code, in form of an int
+            // visit https://docs.oracle.com/javase/7/docs/api/java/awt/event/KeyEvent.html for more informations
+            int key = e.getKeyCode();
+
+            //changing direction, only turning 90°
+            if (key == KeyEvent.VK_LEFT && !right) {  // to turn 180°, 2 keys have to be pressed
+                up = false;
+                down = false;
+                left = true;
+            }
+            if (key == KeyEvent.VK_RIGHT && !left) {
+                up = false;
+                down = false;
+                right = true;
+            }
+            if (key == KeyEvent.VK_UP && !down) {
+                up = true;
+                right = false;
+                left = false;
+            }
+            if (key == KeyEvent.VK_DOWN && !up) {
+                down = true;
+                right = false;
+                left = false;
+            }
+        }
+    }
 
 
 
