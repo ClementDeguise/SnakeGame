@@ -1,67 +1,62 @@
 package Main;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
+import java.util.Random;
+
 
 
 /** Java Snake Game with AWT (OLD)
  *
  *
  *
-**/
+ **/
 
 
 /** size of each joint : 10 px, start with 3 joints, Game Over message displayed in the middle **/
 
 
-
 public class Board extends JPanel implements ActionListener {
+
 
     // must implement the method actionPerformed(ActionEvent) in ActionListener
 
 
     private final int board_width = 300;
     private final int board_height = 300;
-
-    private final int DOT_SIZE = 5;
+    private final int DOT_SIZE = 10;
 
     // movement delay in ms
     private final int delay = 140;
 
-    private Image dot;
-
-
-    //keys pressed, starting from the right, going left
-    private boolean up = false;
-    private boolean down = false;
-    private boolean right = false;
-    private boolean left = true;
-
-
-    //score
-    private int score = 0;
-
-    //dot coordinates
-    private int dot_x;
-    private int dot_y;
 
     //snake coordinates :
     // here we chose to memorize the snake coordinates using an x and y vector of length snake_length,
     // with x[0],y[0] the head
+    private final int x[] = new int[board_width* board_height]; // be sure to have sufficient capacity lol
+    private final int y[] = new int[board_width* board_height];
     private int snake_length;
-    private  int[] x = new int[board_height*board_width]; // be sure to have sufficient capacity lol
-    private  int[] y = new int[board_height*board_width];
+
+    // dot coordinates
+    private int dot_x;
+    private int dot_y;
 
 
-    //game checker
+    //keys pressed, starting from the right, going left
+    private boolean left = false;
+    private boolean right = true;
+    private boolean up = false;
+    private boolean down = false;
+
+    // score
+    int score = 0;
+
+    // game checker
     private boolean inGame = true;
-
 
     // timer for continuous movement when no key is pressed (or same direction)
     private Timer timer;
@@ -69,13 +64,20 @@ public class Board extends JPanel implements ActionListener {
 
 
 
-/** ----------------------------------- **/
+
+
+
+    /** ----------------------------------- **/
+
 
 
     // constructor
-    public Board() {
+    Board() {
+
         initBoard();
     }
+
+
 
     private void initBoard() {
 
@@ -92,25 +94,22 @@ public class Board extends JPanel implements ActionListener {
         The application will try to gain the focus for the next field to prepare it to receive text.
         When the next field is not focusable, this request will be denied and the next field will be tested.
         */
-
-
         setFocusable(true);
+
+
+
         setBackground(Color.black);
 
-        //set the size
-        setPreferredSize(new Dimension(board_width,board_height));
 
+        //set the size
+        setPreferredSize(new Dimension(board_width, board_height));
 
         initGame();
-
     }
 
 
 
-
-
-
-/** set of methods **/
+    /** set of methods **/
 
 
     //generate the starting position of the snake, generate a dot, paint components
@@ -118,13 +117,12 @@ public class Board extends JPanel implements ActionListener {
 
         snake_length = 3;
 
-        //snake starting position : 50 50 going left
-        for (int i = 0; i < snake_length; i++) {
-            x[i] = 50 + i*DOT_SIZE;  // careful to size of "real" pixels
-            y[i] = 50;
+        //snake starting position : 50 50 going right
+        for (int z = 0; z < snake_length; z++) {
+            x[z] = 50 - z * DOT_SIZE; // careful to size of "real" pixels
+            y[z] = 50;
 
             // 50 55 60
-
         }
 
         //generate the first dot
@@ -132,43 +130,26 @@ public class Board extends JPanel implements ActionListener {
 
         // set the timer to the delay, and between-EventListener delay, which is the same
         timer = new Timer(delay, this);
-        //timer.setRepeats(false);
+
         timer.start();
-
-        // start the game
-        //inGame = true;
-
-
-
     }
 
 
-    // generate new dot location, but be careful to avoid the snake !
-    // the program must work for any board dimension
-    // TODO : don't spawn dots on top of the snake
-    private void generateDot() {
 
-        int r = (int) (Math.random() * 29);
-        dot_x = ((r * DOT_SIZE));
 
-        r = (int) (Math.random() * 29);
-        dot_y = ((r * DOT_SIZE));
 
-       // dot_x = new Random().nextInt(board_width);
-       // dot_y = new Random().nextInt(board_height);
-    }
 
 
     // set up the colors, allow for custom textures to be displayed
     @Override
-    public void paintComponents(Graphics g) {
-        super.paintComponents(g);
+    public void paintComponent(Graphics g) {
         System.out.println("entered components");
 
-        //g.setColor(Color.WHITE);
-       // g.drawImage(dot,dot_x,dot_y,this);
+        super.paintComponent(g);
+
         doDrawing(g);
     }
+
 
 
 
@@ -176,22 +157,25 @@ public class Board extends JPanel implements ActionListener {
 
         if (inGame) {
 
-            System.out.println("entered drawing");
 
-            //g.drawImage(dot,dot_x,dot_y,this);
             // set the color of everything we draw
             g.setColor(Color.WHITE);
             // draw dot
-            g.drawLine(dot_x,dot_y,dot_x + DOT_SIZE ,dot_y + DOT_SIZE);
+            g.drawLine(dot_x, dot_y, dot_x + DOT_SIZE , dot_y + DOT_SIZE);
 
             for (int z = 0; z < snake_length; z++) {
                 g.drawLine(x[z],y[z],x[z],y[z]);
             }
 
+
+
             // bind components implementations using native toolkit methods, for ui you can use createMenu, etc
             Toolkit.getDefaultToolkit().sync();
 
-        } else gameOver(g);
+        } else {
+
+            gameOver(g);
+        }
     }
 
 
@@ -202,29 +186,31 @@ public class Board extends JPanel implements ActionListener {
 
         // create the message and the font
         String msg = "Game Over";
-        Font font = new Font("Helvetica",Font.BOLD, 14);
-        FontMetrics metr = getFontMetrics(font);
+        Font small = new Font("Helvetica", Font.BOLD, 14);
+        FontMetrics metr = getFontMetrics(small);
 
         // include it in the graphics
         g.setColor(Color.white);
-        g.setFont(font);
-        g.drawString(msg, board_width - metr.stringWidth(msg) / 2, board_height / 2);
-
-       // inGame = false;
-       // timer.stop();
-
+        g.setFont(small);
+        g.drawString(msg, (board_width - metr.stringWidth(msg)) / 2, board_height / 2);
     }
+
 
 
 
     // check for dot reached and increase score count
     private void dotReached() {
-        if (x[0] == dot_x && y[0] == dot_y) {
-            score += 1;
-            snake_length ++;
+
+        if ((x[0] == dot_x) && (y[0] == dot_y)) {
+
+            score++;
+            snake_length++;
+
             generateDot();
         }
     }
+
+
 
 
     // update snake coordinates: the painting is done by the repaint() method in the Action Listener
@@ -233,81 +219,64 @@ public class Board extends JPanel implements ActionListener {
 
         // be careful to move the snake FROM the tail TO the head, or 2 x values will be the same
         for (int z = snake_length - 1; z > 0; z--) {
-            x[z] = x[z - 1];
-            y[z] = y[z - 1];
+            x[z] = x[(z - 1)];
+            y[z] = y[(z - 1)];
         }
 
+        if (left) x[0] -= DOT_SIZE;
+        if (right) x[0] += DOT_SIZE;
+        if (up) y[0] -= DOT_SIZE;
+        if (down) y[0] += DOT_SIZE;
 
 
-
-        if (up) {y[0] -= DOT_SIZE;} //origin top left
-        if (down) {y[0] += DOT_SIZE;}
-        if (left) {x[0] -= DOT_SIZE;}
-        if (right) {y[0] += DOT_SIZE;}
-
-
-
-        /*if (x[0] == 0) x[0] = board_width - 1;
+        if (x[0] == 0) x[0] = board_width - 1;
         if (x[0] == board_width - 1) x[0] = 0;
         if (y[0] == 0) y[0] = board_height - 1;
-        if (y[0] == board_height - 1) y[0] = 0;*/
+        if (y[0] == board_height - 1) y[0] = 0;
 
     }
+
+
 
 
 
     // check if you hit your tail, call a game over
     private void checkCollision() {
+
         // opposite direction to finish at 1
         for (int z = snake_length - 1; z > 0; z--) {
-            if (x[0] == x[z] && y[0] == y[z]) inGame = false;
-        }
-
-        if (y[0] >= board_height) {
-            inGame = false;
-        }
-
-        if (y[0] < 0) {
-            inGame = false;
-        }
-
-        if (x[0] >= board_width) {
-            inGame = false;
-        }
-
-        if (x[0] < 0) {
-            inGame = false;
+            if ((z > 4) && (x[0] == x[z]) && (y[0] == y[z])) inGame = false;
         }
 
         if (!inGame) {
             timer.stop();
         }
+    }
 
 
 
-
-
-
-
-        if (!inGame) {
-            timer.stop();
-            System.out.println("Timer stopped");
-        }
+    // generate new dot location, but be careful to avoid the snake !
+    // the program must work for any board dimension
+    // TODO : don't spawn dots on top of the snake
+    private void generateDot() {
+        dot_x = new Random().nextInt(board_width);
+        dot_y = new Random().nextInt(board_height);
 
     }
 
 
 
-
-    // what do we do when a key (action) has been pressed
-    // TODO : does it triggers every timer or just on action ?
+    // what do we do when a key (action) has been pressed, or every timer tick
+    // timer is bound to the ActionEvent e
     @Override
     public void actionPerformed(ActionEvent e) {
+        System.out.println("entered action performed");
 
-        System.out.println("Timer");
 
         if (inGame) {
-            System.out.println("Action");
+
+            System.out.println("in game");
+
             dotReached();
             checkCollision();
             moveSnake();
@@ -315,9 +284,9 @@ public class Board extends JPanel implements ActionListener {
 
         // refreshes the view of the graphic component
         repaint();
-
-
     }
+
+
 
 
 
@@ -325,7 +294,7 @@ public class Board extends JPanel implements ActionListener {
     // TODO : check if the class can be put in its own file since it needs to access the direction booleans, and the keyPressed method cannot be modified to take parameters
     private class TAdapter extends KeyAdapter {
 
-       /* default methods:
+        /* default methods:
             keyPressed
             keyReleased
             keyTyped
@@ -335,26 +304,30 @@ public class Board extends JPanel implements ActionListener {
         @Override
         public void keyPressed(KeyEvent e) {
 
+
             //retrieve the keyboard key code, in form of an int
             // visit https://docs.oracle.com/javase/7/docs/api/java/awt/event/KeyEvent.html for more informations
             int key = e.getKeyCode();
 
             //changing direction, only turning 90°
-            if ((key == KeyEvent.VK_LEFT) && (!right)) {  // to turn 180°, 2 keys have to be pressed
-                up = false;
-                down = false;
+            if ((key == KeyEvent.VK_LEFT) && (!right)) { // to turn 180°, 2 keys have to be pressed
                 left = true;
-            }
-            if ((key == KeyEvent.VK_RIGHT) && (!left)) {
                 up = false;
                 down = false;
-                right = true;
             }
+
+            if ((key == KeyEvent.VK_RIGHT) && (!left)) {
+                right = true;
+                up = false;
+                down = false;
+            }
+
             if ((key == KeyEvent.VK_UP) && (!down)) {
                 up = true;
                 right = false;
                 left = false;
             }
+
             if ((key == KeyEvent.VK_DOWN) && (!up)) {
                 down = true;
                 right = false;
@@ -362,8 +335,5 @@ public class Board extends JPanel implements ActionListener {
             }
         }
     }
-
-
-
-
 }
+

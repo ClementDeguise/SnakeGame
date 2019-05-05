@@ -1,3 +1,4 @@
+
 package Main;
 
 
@@ -5,22 +6,10 @@ import javax.swing.*;
 import java.awt.*;
 
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.Random;
-
 
 /** need to instantiate the board class with the Swing JFrame to create UIs **/
 public class snakeGame extends JFrame {
 
-
-
-    // constructor
-   /* private snakeGame() {
-        initUI();
-    }*/
 
     private void initUI() {
         JFrame ex = new JFrame();
@@ -39,8 +28,6 @@ public class snakeGame extends JFrame {
         ex.setVisible(true);
 
 
-
-        //ex.add(new Board());
     }
 
 
@@ -55,43 +42,3 @@ public class snakeGame extends JFrame {
     }
 
 }
-
-
-/* other version
-
- private void initGui() {
-
-        JFrame ex = new JFrame();
-        // TODO : dynamic resizing of game window
-        ex.setResizable(false);
-        ex.getContentPane().add(board, BorderLayout.CENTER);
-        ex.setTitle("Snake Game");
-        //setLocationRelativeTo(null);
-        ex.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-
-
-        ex.pack();
-        ex.setVisible(true);
-
-    }
-
-
-    // main
-    public static void main(String[] args) {
-
-        SwingUtilities.invokeLater(() -> {
-            snakeGame sn = new snakeGame();
-            sn.initGui();
-        });
-
-    }
- */
-
-
-
-
-
-
-
-
